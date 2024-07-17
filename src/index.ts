@@ -102,37 +102,34 @@ function decryptFile(inputFile: string, outputFile: string): Promise<void> {
 }
 
 async function main() {
+  const operation = await prompt<{ action: 'encrypt' | 'decrypt' }>({
+    type: 'select',
+    name: 'action',
+    message: 'Do you want to encrypt or decrypt a file?',
+    choices: ['encrypt', 'decrypt'],
+  });
+
   const fileSelector = new FileSelector();
 
-  console.log('Select the file to encrypt:');
-  const originalFile = await fileSelector.run();
+  console.log(`Select the file to ${operation.action}:`);
+  const selectedFile = await fileSelector.run();
 
-  const encryptedFile = `${originalFile}.encrypted`;
-  const decryptedFile = `${originalFile}.decrypted`;
+  const outputFile = `${selectedFile}.${operation.action}ed`;
 
   try {
-    // Encrypt the file
-    await encryptFile(originalFile, encryptedFile);
-    console.log('File encrypted successfully');
-
-    // Decrypt the file
-    await decryptFile(encryptedFile, decryptedFile);
-    console.log('File decrypted successfully');
-
-    // Compare original and decrypted files
-    const originalContent = fs.readFileSync(originalFile, 'utf8');
-    const decryptedContent = fs.readFileSync(decryptedFile, 'utf8');
-
-    if (originalContent === decryptedContent) {
-      console.log('Decryption successful: Original and decrypted files match');
+    if (operation.action === 'encrypt') {
+      await encryptFile(selectedFile, outputFile);
+      console.log('File encrypted successfully');
     } else {
-      console.log(
-        'Decryption failed: Original and decrypted files do not match',
-      );
+      await decryptFile(selectedFile, outputFile);
+      console.log('File decrypted successfully');
     }
+
+    console.log(`Output file: ${outputFile}`);
   } catch (error) {
     console.error('An error occurred:', error);
   }
 }
 
+// Run the main function
 main();
