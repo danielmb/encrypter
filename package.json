@@ -1,0 +1,27 @@
+{
+  "name": "@danbre14/encrypter",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "bin": {
+    "encrypter": "dist/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/index.js",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^20.14.11",
+    "@typescript-eslint/eslint-plugin": "^7.16.1",
+    "@typescript-eslint/parser": "^7.16.1",
+    "eslint": "^8.57.0",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "enquirer": "^2.4.1"
+  }
+}
