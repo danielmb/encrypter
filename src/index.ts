@@ -66,8 +66,18 @@ class FileSelector {
   }
 }
 
-function encryptFile(inputFile: string, outputFile: string): Promise<void> {
+function deriveKey(password: string): Buffer {
+  return crypto.scryptSync(password, 'salt', 32);
+}
+
+function encryptFile(
+  inputFile: string,
+  outputFile: string,
+  password: string,
+): Promise<void> {
   return new Promise((resolve, reject) => {
+    const key = deriveKey(password);
+    const iv = crypto.randomBytes(16);
     const readStream = fs.createReadStream(inputFile);
     const writeStream = fs.createWriteStream(outputFile);
     const cipher = crypto.createCipheriv(algorithm, key, iv);
@@ -80,25 +90,39 @@ function encryptFile(inputFile: string, outputFile: string): Promise<void> {
   });
 }
 
-function decryptFile(inputFile: string, outputFile: string): Promise<void> {
+function decryptFile(
+  inputFile: string,
+  outputFile: string,
+  password: string,
+): Promise<void> {
   return new Promise((resolve, reject) => {
+    const key = deriveKey(password);
     const readStream = fs.createReadStream(inputFile);
     const writeStream = fs.createWriteStream(outputFile);
 
     readStream.once('readable', () => {
-      const chunk = readStream.read(16);
-      if (!chunk || chunk.length !== 16) {
+      const iv = readStream.read(16);
+      if (!iv || iv.length !== 16) {
         reject(new Error('Invalid encrypted file'));
         return;
       }
 
-      const decipher = crypto.createDecipheriv(algorithm, key, chunk);
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
       readStream.pipe(decipher).pipe(writeStream);
     });
 
     writeStream.on('finish', resolve);
     writeStream.on('error', reject);
   });
+}
+
+async function getPassword(action: 'encrypt' | 'decrypt'): Promise<string> {
+  const response = await prompt<{ password: string }>({
+    type: 'password',
+    name: 'password',
+    message: `Enter the password to ${action} the file:`,
+  });
+  return response.password;
 }
 
 async function main() {
@@ -117,11 +141,13 @@ async function main() {
   const outputFile = `${selectedFile}.${operation.action}ed`;
 
   try {
+    const password = await getPassword(operation.action);
+
     if (operation.action === 'encrypt') {
-      await encryptFile(selectedFile, outputFile);
+      await encryptFile(selectedFile, outputFile, password);
       console.log('File encrypted successfully');
     } else {
-      await decryptFile(selectedFile, outputFile);
+      await decryptFile(selectedFile, outputFile, password);
       console.log('File decrypted successfully');
     }
 
