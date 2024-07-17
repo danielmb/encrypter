@@ -1,6 +1,6 @@
 {
   "name": "@danbre14/encrypter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
   "bin": {
     "encrypter": "dist/index.js"
